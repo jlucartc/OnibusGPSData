@@ -57,7 +57,20 @@ MongoClient.connect(url,function(err,client){
 
 			var data = JSON.parse(stdout);
 
-			
+			client.db(db).collection('ttn-data').insertMany(data,{},function(err,result){
+
+				if(err != null){
+
+					console.log("Erro na inserção de documentos");
+					console.log(err.message);
+
+				}else{
+
+					console.log(result.insertedCount," documentos inseridos com sucesso!");
+
+				}
+
+			});
 
 		}
 
