@@ -30,7 +30,7 @@ app.get('/', function(req,res,next) {
 
       }else{
 
-        var data = JSON.parse(stdout).reverse();
+        var data = JSON.parse(stdout);
 
         var reducedData = new Array();
 
