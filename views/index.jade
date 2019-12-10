@@ -1,5 +1,6 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+  div(id='mapid',class="h-100")
+  script(src='/javascripts/map.js')
+  p(id="data" hidden="true") #{data}

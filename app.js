@@ -3,11 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var MongoClient = require('mongodb').MongoClient;
-
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
+const cp = require("child_process");
 var app = express();
 
 // view engine setup
@@ -20,64 +16,46 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-const cp = require("child_process");
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
+app.get('/', function(req,res,next) {
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  var data;
+  var command = "cat data/output20191210-copia.txt";
+  console.log(command);
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+    cp.exec(command,function(err,stdout,stderr){
 
-MongoClient.connect(url,function(err,client){
+      if(err){ 
 
-	var command = "curl -X GET --header 'Accept: application/json' --header 'Authorization: key ttn-account-v2.AXVZUWtEus1MMpVF8qGf8a7jQEbkU4sUA9sM3WsGkDI' 'https://bus_gps_data.data.thethingsnetwork.org/api/v2/query?last=7d'";
+        console.log('error');
 
-	var db = "onibus_gps_data_db";
+      }else{
 
-	if(err) throw err;
+        var data = JSON.parse(stdout).reverse();
 
-	cp.exec(command,function(err,stdout,stderr){
+        var reducedData = new Array();
 
-		if(err){
+        for(var i = 0; i < data.length; i++){
 
-			console.log("error");
+            data[i].payload_raw = new Buffer(JSON.parse(JSON.stringify(data[i].payload_raw)),'base64').toString('ascii');
 
-		}else{
+            reducedData.push({device_id:data[i].dev_id, raw:data[i].payload_raw, time:data[i].metadata.time});
 
-			var data = JSON.parse(stdout);
+        }
 
-			client.db(db).collection('ttn-data').insertMany(data,{},function(err,result){
 
-				if(err != null){
+      }
 
-					console.log("Erro na inserção de documentos");
-					console.log(err.message);
+      res.render('index', { title: 'Ônibus GPS' , data: JSON.stringify(reducedData) });
 
-				}else{
-
-					console.log(result.insertedCount," documentos inseridos com sucesso!");
-
-				}
-
-			});
-
-		}
-
-	});
-
+    }); 
 
 
 });
+
+app.listen(3000,function () {
+  console.log('Example app listening on port 3000!');
+});
+
+
 
 module.exports = app;
