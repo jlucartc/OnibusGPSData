@@ -61,7 +61,7 @@ file = open('samples.csv','r')
 
 lists = list(csv.reader(file))
 
-data = pandas.DataFrame(lists,columns=lists[0],dtype=np.array(types))
+data = pandas.DataFrame(lists,columns=lists[0])
 
 # Elimina linha de cabeçalho
 data = data.drop(0)
@@ -131,49 +131,82 @@ mAirTime = pandas.DataFrame(mAirTime,columns=['Airtime médio','Spreading Factor
 # Plota a média do airtime para cada spreading factor
 mAirTime.plot(y='Airtime médio',x='Spreading Factor e Bandwidth',color='blue',kind='bar',legend=True,title="Airtime médio(ms) em cada spreading factor")
 
-plt.show()
-
 # -------- Algoritmo para selecionar pontos válidos (com 4 ou mais vizinhos) -------- #
 
 # Calcula quais pontos são válidos. Isto é, calcula se um ponto possui ao menos 4 pontos próximos.
 
-#quantidade = refinedData.shape[0]
+quantidade = refinedData.shape[0]
 
-#aux = [0]*refinedData.shape[0]
-#validPoints = []
+aux = [0]*refinedData.shape[0]
+validPoints = []
 
 # Pontos são considerados próximos caso a distância entre eles seja menor do que 2 metros
 
-#raio = 5 
+raio = 1 
 
-#for i in range(0,quantidade):
+for i in range(0,quantidade):
 
-#    latSrc = refinedData['latitude'].iloc[i] 
-#    longSrc = refinedData['longitude'].iloc[i]
+    latSrc = refinedData['latitude'].iloc[i] 
+    longSrc = refinedData['longitude'].iloc[i]
 
-#    for j in range(0,quantidade):
+    for j in range(0,quantidade):
 
-#        latDest = refinedData['latitude'].iloc[j]
-#        longDest = refinedData['longitude'].iloc[j]
+        latDest = refinedData['latitude'].iloc[j]
+        longDest = refinedData['longitude'].iloc[j]
 
-#        distance = getDistance(latSrc,longSrc,latDest,longDest)
+        distance = getDistance(latSrc,longSrc,latDest,longDest)
 
-#        if(distance <= raio):
+        if(distance <= raio):
 
-#            if(aux[i] >= 4):
+            if(aux[i] >= 4):
 
-#                validPoints.append(i)
+                validPoints.append(i)
 
-#                aux[i] = -1
+                aux[i] = -1
 
-#            elif(aux[i] < 4 and aux[i] >= 0):
+            elif(aux[i] < 4 and aux[i] >= 0):
 
-#                aux[i] = aux[i] + 1
+                aux[i] = aux[i] + 1
 
-#            else:
+                if(aux[i] >= 4):
 
-#                break
+                    validPoints.append(i)
 
-#print(refinedData.iloc[validPoints])
+                    aux[i] = -1
 
+            else:
+
+                break
+count = 0
+
+print(len(validPoints))
+for i in aux:
+    if(i == 4):
+        count = count + 1
+
+print("count: "+str(count))
+print("Terminando...")
+FiveGroupPoints = refinedData.iloc[validPoints]#.to_csv("5-samples-data.csv",";",encoding="utf-8")
+
+perSF2 = FiveGroupPoints.groupby("data_rate")
+sf72 = perSF2.get_group('SF8BW125')
+sf82 = perSF2.get_group('SF7BW125')
+sf92 = perSF2.get_group('SF9BW125')
+sf102 = perSF2.get_group('SF10BW125')
+
+sf72.plot(x='distancia',y='rssi',color='red',kind='scatter',legend=True,title="RSSI(dB) versus distância(m) entre emissor e gateway \n para spreading factor 7 e bandwidth 125kHz")
+sf82.plot(x='distancia',y='rssi',color='blue',kind='scatter',legend=True,title="RSSI(dB) versus distância(m) entre emissor e gateway \n para spreading factor 8 e bandwidth 125kHz")
+sf92.plot(x='distancia',y='rssi',color='green',kind='scatter',legend=True,title="RSSI(dB) versus distância(m) entre emissor e gateway \n para spreading factor 9 e bandwidth 125kHz")
+sf102.plot(x='distancia',y='rssi',color='orange',kind='scatter',legend=True,title="RSSI(dB) versus distância(m) entre emissor e gateway \n para spreading factor 10 e bandwidth 125kHz")
+
+mAirTime2 = []
+mAirTime2.append([sf72.mean()['airtime']/1000000,"SF7BW125"])
+mAirTime2.append([sf82.mean()['airtime']/1000000,"SF8BW125"])
+mAirTime2.append([sf92.mean()['airtime']/1000000,"SF9BW125"])
+mAirTime2.append([sf102.mean()['airtime']/1000000,"SF10BW125"])
+mAirTime2 = pandas.DataFrame(mAirTime2,columns=['Airtime médio','Spreading Factor e Bandwidth'])
+
+mAirTime2.plot(y='Airtime médio',x='Spreading Factor e Bandwidth',color='blue',kind='bar',legend=True,title="Airtime médio(ms) em cada spreading factor")
+
+plt.show()
 # -------- FIM -------- #
