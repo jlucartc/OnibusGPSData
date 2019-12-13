@@ -1,3 +1,4 @@
+app_id,dev_id,hardware_serial,port,counter,is_retry,latitude,longitude,distancia,time,frequency,modulation,data_rate,airtime,coding_rate,gtw_id,timestamp,gtime,channel,rssi,snr,rf_chain,glatitude,glongitude,altitude,location_source
 bus_gps_data,gps_sensor_4,00C47EF7D5B01DCC,1,0,True,0,0,0,2019-12-12T12:40:30.502175686Z,916.8,LORA,SF9BW125,267264000,4/5,eui-b827ebfffeb50b01,1644575548,,2,-94,7.8,0,-3.7464726,-38.578144,1,registry
 bus_gps_data,gps_sensor_4,00C47EF7D5B01DCC,1,1,False,0.0,0.0,4308085.08,2019-12-12T12:40:34.754208916Z,916.8,LORA,SF9BW125,267264000,4/5,eui-b827ebfffeb50b01,1648825212,,2,-101,6.8,0,-3.7464726,-38.578144,1,registry
 bus_gps_data,gps_sensor_4,00C47EF7D5B01DCC,1,2,False,0.0,0.0,4308085.08,2019-12-12T12:40:38.24536838Z,916.8,LORA,SF9BW125,267264000,4/5,eui-b827ebfffeb50b01,1652316828,,2,-101,7,0,-3.7464726,-38.578144,1,registry
