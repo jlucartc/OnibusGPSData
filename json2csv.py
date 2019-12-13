@@ -4,6 +4,32 @@ import json
 import re
 import base64
 import csv
+from math import sin, cos, sqrt, atan2, radians
+
+# ---- Distance formula ---- #
+
+gatewayCoordinates = [-3.746569,-38.578127]
+
+def getDistance(latSource,longSource,latDest,longDest):
+
+    R = 6373.0
+
+    lat1 = radians(latSource)
+    lon1 = radians(longSource)
+    lat2 = radians(latDest)
+    lon2 = radians(longDest)
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    distance = R * c
+
+    return float("{0:.2f}".format(distance*1000)) # returns distance in meters
+
+# ---- Distance formula ---- #
 
 header = [
     'app_id',
@@ -12,7 +38,9 @@ header = [
     'port',
     'counter',
     'is_retry',
-    'payload_raw',
+    'latitude',
+    'longitude',
+    'distancia',
     'time',
     'frequency',
     'modulation',
@@ -32,7 +60,7 @@ header = [
     'location_source'    
 ]
 
-filenames = ['data/output20191212_SF9.txt']#,'data/output20191211.txt','data/output20191212_SF9.txt']
+filenames = ['data/output20191212_SF9.txt','data/output20191211.txt','data/output20191210.txt']
 files = []
 fileData = []
 
@@ -61,7 +89,7 @@ data = json.loads(re.sub('^,','[',data)+"]")
 
 formatedJSONRows = []
 
-formatedJSONRows.append(header)
+#formatedJSONRows.append(header)
 
 for message in data:
     
@@ -83,7 +111,9 @@ for message in data:
 
             if(key == 'payload_raw'):
 
-                row.append("RETRY")
+                row.append(0)
+                row.append(0)
+                row.append(0)
 
             elif(key == 'metadata'):
 
@@ -111,9 +141,9 @@ for message in data:
 
                             if(len(gatewayKeys) == 7):
 
-                                row.append("None")
-                                row.append("None")
-                                row.append("None")
+                                row.append(0)
+                                row.append(0)
+                                row.append(0)
                                 row.append("None")
 
                     else:
@@ -136,11 +166,12 @@ for message in data:
                 coords = coords.split(';')
                 #print(coords)
                 if(len(coords) > 1):
-                    coords[0] = coords[0].strip()
-                    coords[1] = coords[1][:len(coords[1])].strip()
-                    coords = coords[0]+" "+coords[1]
-                #print(coords)
-                row.append(coords)
+                    coords[0] = float(coords[0].strip())
+                    #print(coords[1][0:len(coords[1])].strip())
+                    coords[1] = float(coords[1][0:len(coords[1])-1].strip())
+                row.append(coords[0])
+                row.append(coords[1])
+                row.append(float(getDistance(gatewayCoordinates[0],gatewayCoordinates[1],coords[0],coords[1])))
 
 
             elif(key == 'metadata'):
@@ -169,9 +200,9 @@ for message in data:
 
                             if(len(gatewayKeys) == 7):
 
-                                row.append("None")
-                                row.append("None")
-                                row.append("None")
+                                row.append(0)
+                                row.append(0)
+                                row.append(0)
                                 row.append("None")
                                 
 
@@ -189,7 +220,7 @@ for message in data:
 
     formatedJSONRows.append(row)
 
-with open('samples_20191212.csv', 'w', newline='\n') as csvfile:
+with open('samples.csv', 'w', newline='\n') as csvfile:
     writer = csv.writer(csvfile,delimiter=",")
 
     for row in formatedJSONRows:
