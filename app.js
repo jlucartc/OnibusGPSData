@@ -19,7 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', function(req,res,next) {
 
   var data;
-  var command = "cat data/output20191212_SF9-copia.txt";
+  var command = "cat data/JSON/output20191219_SF9_total";
   console.log(command);
 
     cp.exec(command,function(err,stdout,stderr){

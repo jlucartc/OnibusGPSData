@@ -22,5 +22,7 @@ for(var i = 0; i < data.length; i++){
 	}
 }
 
+L.control.scale({position :'topleft'}).addTo(map);
+
 //var marker = L.marker([-3.717, -38.543]).addTo(map);
 //marker.bindPopup("<b>Hello world!</b><br>I am a popup.");

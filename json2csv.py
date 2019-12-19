@@ -4,7 +4,11 @@ import json
 import re
 import base64
 import csv
+import os
+from datetime import date
 from math import sin, cos, sqrt, atan2, radians
+
+dirname = 'data/RAW/'
 
 
 # Calcula a distância entre dois pares de coordenadas
@@ -64,23 +68,160 @@ header = [
 # Abre todos os arquivos de amostras, faz o parsing do arquivo, transforma em JSON e cria
 # uma lista de linhas, onde as linhas serão inseridas em um arquivo .csv para que outro
 # código faça a manipulação dos dados.
-filenames = ['data/output20191212_SF9.txt','data/output20191211.txt','data/output20191210.txt']
+filenames = os.listdir(dirname)#['output20191217_SF9.txt']
 files = []
 fileData = []
 
 for name in filenames:
     
-    files.append(open(name,'r'))
+    files.append(open(dirname+name,'r'))
     
-    if(len(fileData) == 0):
+    #if(len(fileData) == 0):
     
-        fileData.append(files[len(files)-1].read())
+    fileData.append(files[len(files)-1].read())
     
-    elif(len(fileData) > 0):
+    #elif(len(fileData) > 0):
 
-        fileData[0] = fileData[0] + files[len(files)-1].read()
+    #    fileData[0] = fileData[0] + files[len(files)-1].read()
 
 data = fileData[0]
+
+counter = 0;
+
+for file in fileData:
+
+    file = re.sub('\w*\/\w*\/\w*\/\w*\s',',',file)
+    file = json.loads(re.sub('^,','[',file)+"]")
+
+    formatedJSONRows = []
+
+    # Insere o cabeçalho no arquivo csv
+    formatedJSONRows.append(header)
+
+    for message in data:
+        
+        row = []
+
+        keys = message.keys()
+
+        counter = 0;
+
+        for key in keys:
+
+            # len(keys) == 8 significa que a mensagem possui campo 'is_retry'
+
+            if(len(keys) == 8):
+
+                if(key == 'payload_raw'):
+
+                    row.append(0)
+                    row.append(0)
+                    row.append(0)
+
+                elif(key == 'metadata'):
+
+                    metadataKeys = message[key].keys()
+
+                    for metadataKey in metadataKeys:
+
+                        if(metadataKey == 'gateways'):
+
+                            for gateway in range(0,len(message[key][metadataKey])):
+
+                                gatewayKeys = message[key][metadataKey][gateway].keys()
+
+                                counter = 0
+
+                                for gatewayKey in gatewayKeys:
+
+                                    row.append(message[key][metadataKey][gateway][gatewayKey])
+
+                                if(len(gatewayKeys) == 7):
+
+                                    row.append(0)
+                                    row.append(0)
+                                    row.append(0)
+                                    row.append("None")
+
+                        else:
+
+                            row.append(message[key][metadataKey])
+
+                else:
+
+                    row.append(message[key])
+
+                counter = counter + 1
+
+            else:
+
+                if(counter == 5):
+
+                    row.append("False")
+
+                    coords = base64.b64decode(message[key]).decode('utf-8')
+                    coords = coords.split(';')
+                    if(len(coords) > 1):
+                        coords[0] = float(coords[0].strip())
+                        coords[1] = float(coords[1][0:len(coords[1])-1].strip())
+                    row.append(coords[0])
+                    row.append(coords[1])
+                    row.append(float(getDistance(gatewayCoordinates[0],gatewayCoordinates[1],coords[0],coords[1])))
+
+
+                elif(key == 'metadata'):
+
+                    metadataKeys = message[key].keys()
+
+                    for metadataKey in metadataKeys:
+
+                        if(metadataKey == 'gateways'):
+
+                            for gateway in range(0,len(message[key][metadataKey])):
+
+                                gatewayKeys = message[key][metadataKey][gateway].keys()
+
+                                counter = 0
+
+                                for gatewayKey in gatewayKeys:
+
+                                    row.append(message[key][metadataKey][gateway][gatewayKey])
+
+                                if(len(gatewayKeys) == 7):
+
+                                    row.append(0)
+                                    row.append(0)
+                                    row.append(0)
+                                    row.append("None")
+                                    
+                        else:
+
+                            row.append(message[key][metadataKey])
+
+                else:
+
+                    row.append(message[key])
+
+                # == header
+                counter = counter + 1
+
+    formatedJSONRows.append(row)
+
+    # Abre o arquivo .csv e insere as linhas geradas
+    dataAtual = date.today()
+
+    outputFile ='data/CSV/'+str(fileNames[counter])+'.csv'
+
+    with open(outputFile, 'w', newline='\n') as csvfile:
+        writer = csv.writer(csvfile,delimiter=",")
+
+        for row in formatedJSONRows:
+
+            writer.writerow(row)
+
+    csvfile.close()
+
+# ---- OLD CODE ---- #
 
 # Realiza um `find and replace` com expressões regulares para formatar o texto e gerar um JSON válido.
 data = re.sub('\w*\/\w*\/\w*\/\w*\s',',',data)
@@ -201,7 +342,11 @@ for message in data:
     formatedJSONRows.append(row)
 
 # Abre o arquivo .csv e insere as linhas geradas
-with open('samples.csv', 'w', newline='\n') as csvfile:
+dataAtual = date.today()
+
+outputFile ='data/CSV/'+str(dataAtual.year)+str(dataAtual.month)+str(dataAtual.day)+'samples.csv'
+
+with open(outputFile, 'w', newline='\n') as csvfile:
     writer = csv.writer(csvfile,delimiter=",")
 
     for row in formatedJSONRows:
